@@ -1,4 +1,4 @@
-export const BFC_STAKING_ABI = [
+export const BfcStakingABI = [
       {
         "inputs": [],
         "name": "cancel_candidate_bond_less",
