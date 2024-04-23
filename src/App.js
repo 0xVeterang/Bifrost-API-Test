@@ -5,7 +5,7 @@ import BfcStakingABI from "./abi/bfc_staking"; // abi 파일 임포트
 function App() {
   const [accounts, setAccounts] = useState([]);
   const [web3, setWeb3] = useState(null);
-  const [contractResult, setContractResult] = useState(null); // 결과값 상태 추가
+  const [outputData, setOutputData] = useState([]);
 
   useEffect(() => {
     // MetaMask가 설치되어 있는지 확인
@@ -44,14 +44,17 @@ function App() {
       // 하드코딩된 주소를 파라미터로 전달하여 함수 호출
       const addressParam = "0x6bef93e6d6bc1e02b9d697b4fb8606152c200b29";
       const result = await contract.methods
-        .candidate_state(addressParam)
+        .candidate_top_nominations(addressParam)
         .call();
 
-      // BigInt 값을 문자열로 변환하고 뒤에서 18자리를 제외하여 출력
-      result.initial_bond = result.initial_bond.toString().slice(0, -18);
-      result.voting_power = result.voting_power.toString().slice(0, -18);
-      // 결과값을 상태에 저장
-      setContractResult(result);
+      // 2번과 3번 데이터만 추출하여 새로운 배열 생성
+      const newData = [];
+      result[2].forEach((item, index) => {
+        // 뒤에 18글자 삭제하여 문자열로 변환
+        const intData = result[3][index].toString().slice(0, -18);
+        newData.push(`${item.replace(/['"]+/g, "")}: ${intData}`);
+      });
+      setOutputData(newData);
     } catch (error) {
       console.error("컨트랙트 함수 호출 중 에러 발생:", error);
     }
@@ -65,15 +68,12 @@ function App() {
           <p>연결된 네트워크: {web3.currentProvider.networkVersion}</p>
           <p>연결된 계정: {accounts.join(", ")}</p>
           <button onClick={handleButtonClick}>Get Information</button>
-          {contractResult && (
-            <div>
-              <p>candidate: {contractResult.candidate}</p>
-              <p>stash: {contractResult.stash}</p>
-              <p>bond: {contractResult.bond.toString()}</p>
-              <p>initial_bond: {contractResult.initial_bond} BFC</p>
-              <p>voting_power: {contractResult.voting_power} BFC</p>
-            </div>
-          )}
+          {/* 데이터 출력 */}
+          <div>
+            {outputData.map((data, index) => (
+              <p key={index}>{data}</p>
+            ))}
+          </div>
         </div>
       ) : (
         <p>MetaMask를 설치하고 연결해주세요.</p>
